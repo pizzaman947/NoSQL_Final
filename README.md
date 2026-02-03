@@ -19,7 +19,6 @@ A comprehensive e-commerce platform for managing and selling computer hardware p
 - [Development](#development)
 - [Deployment Considerations](#deployment-considerations)
 - [Future Enhancements](#future-enhancements)
-- [License](#license)
 
 ## Overview
 
@@ -936,7 +935,7 @@ const products = [
       ssd: "1TB NVMe"
     }
   },
-  // Add more products...
+  
 ];
 
 async function seed() {

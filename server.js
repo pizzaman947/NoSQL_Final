@@ -110,7 +110,7 @@ app.put('/api/products/:id/review', auth, async (req, res) => {
 app.get('/api/orders', [auth, isAdmin], async (req, res) => {
     const orders = await Order.find()
         .populate('customer_id', 'full_name email')
-        .populate('items.product_id', 'model_name')
+        .populate('items.product_id', 'model_name price') 
         .sort({ order_date: -1 });
     res.send(orders);
 });

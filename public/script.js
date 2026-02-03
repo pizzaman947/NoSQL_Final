@@ -93,17 +93,21 @@ async function loadAdminData() {
     const pRes = await fetch(`${API}/products`);
     const products = await pRes.json();
     document.getElementById("adminTable").innerHTML = products.map(p => `
-        <tr><td>${p.model_name}</td><td>${p.price}</td><td>${p.stock}</td>
+        <tr><td>${p.model_name}</td><td>${p.price.toLocaleString()}</td><td>${p.stock}</td>
         <td><button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')">X</button></td></tr>`).join("");
 
     const oRes = await fetch(`${API}/orders`, { headers: { "x-auth-token": token } });
     const orders = await oRes.json();
+    
     document.getElementById("ordersTable").innerHTML = orders.map(o => {
         const productNames = o.items.map(i => i.product_id ? i.product_id.model_name : 'Deleted').join(", ");
+        const productPrices = o.items.map(i => i.product_id ? i.product_id.price.toLocaleString() + ' KZT' : '-').join(", ");
+        
         return `<tr>
             <td>${new Date(o.order_date).toLocaleDateString()}</td>
             <td>${o.customer_id ? o.customer_id.full_name : 'Unknown'}</td>
             <td><small>${productNames}</small></td>
+            <td><span class="text-success fw-bold">${productPrices}</span></td>
             <td><span class="badge bg-secondary">${o.status}</span></td>
             <td>
                 <select onchange="updateOrderStatus('${o._id}', this.value)" class="form-select form-select-sm">
@@ -118,7 +122,7 @@ async function loadAdminData() {
 
     const sRes = await fetch(`${API}/stats/revenue`, { headers: { "x-auth-token": token }});
     const sD = await sRes.json();
-    document.getElementById("stats").innerHTML = "Revenue: " + sD.map(s => `${s._id}: ${s.total.toLocaleString()} KZT`).join(" | ");
+    document.getElementById("stats").innerHTML = "<strong>Revenue Analytics:</strong> " + sD.map(s => `${s._id}: ${s.total.toLocaleString()} KZT`).join(" | ");
 }
 
 async function updateOrderStatus(id, status) {

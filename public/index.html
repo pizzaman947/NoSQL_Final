@@ -53,42 +53,54 @@
         </section>
 
         <section id="adminPage" class="d-none">
-            <h2 class="mb-4">Admin Dashboard</h2>
-            <div id="stats" class="alert alert-primary shadow-sm mb-4"></div>
+    <h2 class="mb-4">Admin Dashboard</h2>
+    <div id="stats" class="alert alert-primary shadow-sm mb-4"></div>
 
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-dark text-white">Add New Product</div>
-                        <div class="card-body">
-                            <input type="text" id="pName" class="form-control mb-2" placeholder="Model Name">
-                            <select id="pCat" class="form-select mb-2">
-                                <option value="Gaming">Gaming</option>
-                                <option value="Office">Office</option>
-                            </select>
-                            <input type="number" id="pPrice" class="form-control mb-2" placeholder="Price">
-                            <input type="number" id="pStock" class="form-control mb-2" placeholder="Stock">
-                            <hr><h6>Specs:</h6>
-                            <input type="text" id="pCpu" class="form-control mb-2" placeholder="CPU">
-                            <input type="text" id="pGpu" class="form-control mb-2" placeholder="GPU">
-                            <input type="text" id="pRam" class="form-control mb-2" placeholder="RAM">
-                            <input type="text" id="pSsd" class="form-control mb-2" placeholder="SSD">
-                            <button class="btn btn-dark w-100" onclick="addProduct()">Save Product</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-8">
-                    <div class="card shadow-sm mb-4"><div class="card-header">Inventory</div><div class="card-body">
-                        <table class="table table-sm"><thead><tr><th>Model</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
-                        <tbody id="adminTable"></tbody></table>
-                    </div></div>
-                    <div class="card shadow-sm"><div class="card-header">Orders Management</div><div class="card-body">
-                        <table class="table table-sm"><thead><tr><th>Date</th><th>Customer</th><th>Product</th><th>Status</th><th>Action</th></tr></thead>
-                        <tbody id="ordersTable"></tbody></table>
-                    </div></div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">Add New Product</div>
+                <div class="card-body">
+                    <input type="text" id="pName" class="form-control mb-2" placeholder="Model Name">
+                    <select id="pCat" class="form-select mb-2">
+                        <option value="Gaming">Gaming</option>
+                        <option value="Office">Office</option>
+                    </select>
+                    <input type="number" id="pPrice" class="form-control mb-2" placeholder="Price">
+                    <input type="number" id="pStock" class="form-control mb-2" placeholder="Stock">
+                    <hr><h6>Specs:</h6>
+                    <input type="text" id="pCpu" class="form-control mb-2" placeholder="CPU">
+                    <input type="text" id="pGpu" class="form-control mb-2" placeholder="GPU">
+                    <input type="text" id="pRam" class="form-control mb-2" placeholder="RAM">
+                    <input type="text" id="pSsd" class="form-control mb-2" placeholder="SSD">
+                    <button class="btn btn-dark w-100" onclick="addProduct()">Save Product</button>
                 </div>
             </div>
-        </section>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4"><div class="card-header">Inventory</div><div class="card-body">
+                <table class="table table-sm"><thead><tr><th>Model</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
+                <tbody id="adminTable"></tbody></table>
+            </div></div>
+            
+            <div class="card shadow-sm"><div class="card-header">Orders Management</div><div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Product</th>
+                            <th>Price</th> <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTable"></tbody>
+                </table>
+            </div></div>
+        </div>
+    </div>
+</section>
     </div>
 
     <div class="modal fade" id="productModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content" id="modalContent"></div></div></div>
