@@ -17,7 +17,6 @@ A comprehensive e-commerce platform for managing and selling computer hardware p
 - [Usage Guide](#usage-guide)
 - [Project Structure](#project-structure)
 - [Development](#development)
-- [Deployment Considerations](#deployment-considerations)
 - [Future Enhancements](#future-enhancements)
 
 ## Overview
@@ -33,7 +32,6 @@ The application leverages MongoDB's document-oriented structure to efficiently h
 **Product Browsing and Filtering**
 - View complete product catalog with pagination-ready structure
 - Filter products by category (Gaming, Office)
-- Sort products by price in descending order
 - Real-time stock availability display
 
 **Product Details and Reviews**
@@ -45,7 +43,6 @@ The application leverages MongoDB's document-oriented structure to efficiently h
 **Order Management**
 - Single-click order placement
 - Automatic stock decrement upon order
-- Order confirmation feedback
 - Authenticated user order tracking
 
 ### Administrative Features
@@ -60,13 +57,7 @@ The application leverages MongoDB's document-oriented structure to efficiently h
 - View all customer orders with details
 - Update order status (Processing, Shipped, Delivered)
 - View customer information per order
-- Chronological order listing
 
-**Analytics and Reporting**
-- Revenue aggregation by product category
-- Real-time statistics dashboard
-- Order volume tracking
-- Customer purchase patterns
 
 ### Authentication and Security
 
@@ -100,17 +91,6 @@ The application leverages MongoDB's document-oriented structure to efficiently h
 - npm - Package management
 
 ## Architecture
-
-The application follows a classic three-tier architecture:
-
-### Presentation Layer
-The frontend is built with vanilla JavaScript and Bootstrap, providing a responsive single-page application experience. Navigation between different views (catalog, login, register, admin panel) is handled client-side without full page reloads. The UI communicates with the backend exclusively through RESTful API calls.
-
-### Application Layer
-Express.js handles HTTP requests and implements business logic. Middleware functions manage authentication and authorization. Routes are organized by resource type (auth, products, orders, stats). The server validates incoming data, processes requests, and returns appropriate responses.
-
-### Data Layer
-MongoDB stores all application data in three primary collections: products, users, and orders. Mongoose provides schema validation, type casting, and query building capabilities. The database uses indexing strategies to optimize query performance for common access patterns.
 
 ### Request Flow
 
@@ -152,7 +132,7 @@ The Product schema represents computer hardware items available for sale.
 
 **Indexes**
 - Single field index on `category` for filtered queries
-- Compound index on `category` (ascending) and `price` (descending) for optimized category browsing with price sorting
+
 
 **Design Rationale**
 - Embedded `specs` object allows flexible specification storage without rigid schema constraints
@@ -660,28 +640,6 @@ Comprehensive management interface divided into sections.
 - Review submission: Authenticated users
 - Order placement: Authenticated users
 
-### Vulnerability Considerations
-
-**Current Implementation**
-- No rate limiting (vulnerable to brute force)
-- No token expiration (compromised tokens valid indefinitely)
-- No password strength requirements
-- No CSRF protection
-- No input sanitization for XSS prevention
-- CORS allows all origins
-
-**Production Recommendations**
-1. Implement token expiration and refresh mechanism
-2. Add rate limiting middleware (express-rate-limit)
-3. Enforce password complexity requirements
-4. Sanitize user inputs (express-validator)
-5. Restrict CORS to specific domains
-6. Use HTTPS in production
-7. Implement CSRF tokens for state-changing operations
-8. Add security headers (helmet middleware)
-9. Implement account lockout after failed login attempts
-10. Add logging and monitoring for security events
-
 ## Usage Guide
 
 ### Customer Workflow
@@ -756,7 +714,7 @@ Comprehensive management interface divided into sections.
 
 ### Creating First Admin User
 
-The application does not include automatic admin user creation. Manually create an admin user:
+Admin user is added manually or role is changeable through MongoDB itslef
 
 **Method 1: Database Direct Insert**
 ```javascript
@@ -869,31 +827,6 @@ Run development server:
 npm run dev
 ```
 
-### Testing the Application
-
-**Manual Testing Checklist**
-
-Authentication:
-- [ ] Register new user account
-- [ ] Login with valid credentials
-- [ ] Login with invalid credentials
-- [ ] Logout and verify token removal
-- [ ] Access protected routes without token
-
-Product Management:
-- [ ] View all products in catalog
-- [ ] Filter products by category
-- [ ] Add new product as admin
-- [ ] Delete product as admin
-- [ ] View product details and reviews
-
-Order Processing:
-- [ ] Place order as authenticated user
-- [ ] Verify stock decrement
-- [ ] View orders as admin
-- [ ] Update order status
-- [ ] Verify customer information population
-
 ### Database Management
 
 **Viewing Database Contents**
@@ -962,62 +895,6 @@ seed();
 - Use lean() for read-only queries to improve performance
 - Implement proper error handling for database operations
 - Use transactions for operations requiring atomicity
-
-## Deployment Considerations
-
-### Production Environment Setup
-
-**Environment Variables**
-- Never commit .env file to version control
-- Use environment variable management service
-- Rotate JWT secret regularly
-- Use strong, randomly generated secrets
-
-**MongoDB Atlas Configuration**
-- Enable IP whitelisting for security
-- Configure backup schedules
-- Monitor database performance metrics
-- Set up alerts for anomalies
-
-**Server Hosting Options**
-- Heroku (easy deployment, automatic scaling)
-- DigitalOcean (VPS with full control)
-- AWS EC2 (enterprise-grade infrastructure)
-- Vercel/Netlify (frontend), MongoDB Atlas (backend)
-
-### Performance Optimization
-
-**Database Optimization**
-- Implement database connection pooling
-- Add indexes for common query patterns
-- Use projection to limit returned fields
-- Implement pagination for large result sets
-
-**Application Optimization**
-- Enable compression middleware (compression package)
-- Implement caching for frequently accessed data
-- Minimize payload sizes
-- Use CDN for static assets
-
-**Frontend Optimization**
-- Minify JavaScript and CSS
-- Implement lazy loading for images
-- Use browser caching headers
-- Bundle and compress assets
-
-### Monitoring and Logging
-
-**Application Monitoring**
-- Implement structured logging (winston, morgan)
-- Track error rates and response times
-- Monitor database query performance
-- Set up uptime monitoring
-
-**Security Monitoring**
-- Log authentication attempts
-- Track failed login attempts per IP
-- Monitor for suspicious patterns
-- Implement alerting for security events
 
 ## Future Enhancements
 

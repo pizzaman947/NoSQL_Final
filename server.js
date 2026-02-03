@@ -85,8 +85,9 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/products', async (req, res) => {
-    const { cat } = req.query;
-    const products = await Product.find(cat ? { category: cat } : {}).sort({ price: -1 });
+    const { cat, sort } = req.query;
+    const sortOrder = sort === 'asc' ? 1 : -1;
+    const products = await Product.find(cat ? { category: cat } : {}).sort({ price: sortOrder });
     res.send(products);
 });
 
@@ -102,15 +103,26 @@ app.delete('/api/products/:id', [auth, isAdmin], async (req, res) => {
 });
 
 app.put('/api/products/:id/review', auth, async (req, res) => {
-    const review = { ...req.body, user: req.user.name };
-    await Product.updateOne({ _id: req.params.id }, { $push: { reviews: review } });
+    const { rating, comment } = req.body;
+    if (rating < 1 || rating > 5) {
+        return res.status(400).send('Rating must be between 1 and 5');
+    }
+    const review = { 
+        rating: Number(rating), 
+        comment, 
+        user: req.user.name 
+    };
+    await Product.updateOne(
+        { _id: req.params.id }, 
+        { $push: { reviews: review } }
+    );
     res.send({ success: true });
 });
 
 app.get('/api/orders', [auth, isAdmin], async (req, res) => {
     const orders = await Order.find()
         .populate('customer_id', 'full_name email')
-        .populate('items.product_id', 'model_name price') 
+        .populate('items.product_id', 'model_name price')
         .sort({ order_date: -1 });
     res.send(orders);
 });
@@ -132,10 +144,21 @@ app.post('/api/orders', auth, async (req, res) => {
 
 app.get('/api/stats/revenue', [auth, isAdmin], async (req, res) => {
     const stats = await Order.aggregate([
+        { $match: { status: "Delivered" } },
         { $unwind: "$items" },
-        { $lookup: { from: "products", localField: "items.product_id", foreignField: "_id", as: "pd" } },
+        { $lookup: { 
+            from: "products", 
+            localField: "items.product_id", 
+            foreignField: "_id", 
+            as: "pd" 
+        } },
         { $unwind: "$pd" },
-        { $group: { _id: "$pd.category", total: { $sum: "$total_amount" } } }
+        { $group: { 
+            _id: "$pd.category", 
+            total: { $sum: { $multiply: ["$pd.price", "$items.quantity"] } },
+            count: { $sum: "$items.quantity" }
+        } },
+        { $sort: { total: -1 } }
     ]);
     res.send(stats);
 });

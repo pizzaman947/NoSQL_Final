@@ -54,7 +54,8 @@ function handleLogout() { token = null; localStorage.removeItem("token"); showPa
 
 async function loadProducts() {
     const cat = document.getElementById("categoryFilter").value;
-    const res = await fetch(`${API}/products${cat ? '?cat=' + cat : ''}`);
+    const sort = document.getElementById("sortFilter").value;
+    const res = await fetch(`${API}/products?${cat ? 'cat=' + cat + '&' : ''}sort=${sort}`);
     currentProducts = await res.json();
     document.getElementById("productGrid").innerHTML = currentProducts.map(p => `
         <div class="col-md-4 mb-4"><div class="card h-100 shadow-sm border-0"><div class="card-body">
@@ -66,6 +67,40 @@ async function loadProducts() {
                 <button class="btn btn-success btn-sm" onclick="placeOrder('${p._id}', ${p.price})">Order</button>
             </div>
         </div></div></div>`).join("");
+}
+
+async function loadAdminData() {
+    const pRes = await fetch(`${API}/products`);
+    const products = await pRes.json();
+    document.getElementById("adminTable").innerHTML = products.map(p => `
+        <tr><td>${p.model_name}</td><td>${p.price.toLocaleString()}</td><td>${p.stock}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')">X</button></td></tr>`).join("");
+
+    const oRes = await fetch(`${API}/orders`, { headers: { "x-auth-token": token } });
+    const orders = await oRes.json();
+    document.getElementById("ordersTable").innerHTML = orders.map(o => {
+        const pNames = o.items.map(i => i.product_id ? i.product_id.model_name : 'Deleted').join(", ");
+        const pPrices = o.items.map(i => i.product_id ? i.product_id.price.toLocaleString() + ' KZT' : '-').join(", ");
+        return `<tr>
+            <td>${new Date(o.order_date).toLocaleDateString()}</td>
+            <td>${o.customer_id ? o.customer_id.full_name : 'Unknown'}</td>
+            <td><small>${pNames}</small></td>
+            <td><span class="text-success fw-bold">${pPrices}</span></td>
+            <td><span class="badge bg-secondary">${o.status}</span></td>
+            <td>
+                <select onchange="updateOrderStatus('${o._id}', this.value)" class="form-select form-select-sm">
+                    <option value="">Change</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                </select>
+            </td>
+        </tr>`;
+    }).join("");
+
+    const sRes = await fetch(`${API}/stats/revenue`, { headers: { "x-auth-token": token }});
+    const sD = await sRes.json();
+    document.getElementById("stats").innerHTML = "Revenue: " + sD.map(s => `${s._id}: ${s.total.toLocaleString()} KZT`).join(" | ");
 }
 
 async function addProduct() {
@@ -81,48 +116,12 @@ async function addProduct() {
             ssd: document.getElementById("pSsd").value
         }
     };
-    const res = await fetch(`${API}/products`, {
+    await fetch(`${API}/products`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-auth-token": token },
         body: JSON.stringify(body)
     });
-    if (res.ok) { alert("Added!"); loadAdminData(); }
-}
-
-async function loadAdminData() {
-    const pRes = await fetch(`${API}/products`);
-    const products = await pRes.json();
-    document.getElementById("adminTable").innerHTML = products.map(p => `
-        <tr><td>${p.model_name}</td><td>${p.price.toLocaleString()}</td><td>${p.stock}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')">X</button></td></tr>`).join("");
-
-    const oRes = await fetch(`${API}/orders`, { headers: { "x-auth-token": token } });
-    const orders = await oRes.json();
-    
-    document.getElementById("ordersTable").innerHTML = orders.map(o => {
-        const productNames = o.items.map(i => i.product_id ? i.product_id.model_name : 'Deleted').join(", ");
-        const productPrices = o.items.map(i => i.product_id ? i.product_id.price.toLocaleString() + ' KZT' : '-').join(", ");
-        
-        return `<tr>
-            <td>${new Date(o.order_date).toLocaleDateString()}</td>
-            <td>${o.customer_id ? o.customer_id.full_name : 'Unknown'}</td>
-            <td><small>${productNames}</small></td>
-            <td><span class="text-success fw-bold">${productPrices}</span></td>
-            <td><span class="badge bg-secondary">${o.status}</span></td>
-            <td>
-                <select onchange="updateOrderStatus('${o._id}', this.value)" class="form-select form-select-sm">
-                    <option value="">Change</option>
-                    <option value="Processing">Processing</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Delivered">Delivered</option>
-                </select>
-            </td>
-        </tr>`;
-    }).join("");
-
-    const sRes = await fetch(`${API}/stats/revenue`, { headers: { "x-auth-token": token }});
-    const sD = await sRes.json();
-    document.getElementById("stats").innerHTML = "<strong>Revenue Analytics:</strong> " + sD.map(s => `${s._id}: ${s.total.toLocaleString()} KZT`).join(" | ");
+    loadAdminData();
 }
 
 async function updateOrderStatus(id, status) {
@@ -150,7 +149,7 @@ async function viewProduct(id) {
             <hr><h6>Reviews:</h6>
             <div>${p.reviews.map(r => `<p class="mb-1"><strong>${r.user}:</strong> ${r.comment} (${r.rating}/5)</p>`).join("")}</div>
             ${token ? `<div class="mt-3">
-                <input type="number" id="rRate" class="form-control mb-1" placeholder="1-5" min="1" max="5">
+                <input type="number" id="rRate" class="form-control mb-1" placeholder="Rating" min="1" max="5">
                 <textarea id="rCom" class="form-control mb-2" placeholder="Comment"></textarea>
                 <button class="btn btn-primary btn-sm w-100" onclick="submitReview('${p._id}')">Post</button>
             </div>` : ''}
@@ -159,16 +158,32 @@ async function viewProduct(id) {
 }
 
 async function submitReview(id) {
-    await fetch(`${API}/products/${id}/review`, {
+    const rateInput = document.getElementById("rRate");
+    const comInput = document.getElementById("rCom");
+    const rating = parseInt(rateInput.value);
+    if (isNaN(rating) || rating < 1 || rating > 5) {
+        alert("Please enter a rating between 1 and 5");
+        return;
+    }
+    if (!comInput.value.trim()) {
+        alert("Please leave a comment");
+        return;
+    }
+    const res = await fetch(`${API}/products/${id}/review`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "x-auth-token": token },
         body: JSON.stringify({ 
-            rating: document.getElementById("rRate").value, 
-            comment: document.getElementById("rCom").value 
+            rating: rating, 
+            comment: comInput.value 
         })
     });
-    bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
-    loadProducts();
+    if (res.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+        loadProducts();
+    } else {
+        const errorText = await res.text();
+        alert("Error: " + errorText);
+    }
 }
 
 async function placeOrder(pId, price) {
