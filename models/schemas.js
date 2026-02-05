@@ -33,7 +33,13 @@ const OrderSchema = new mongoose.Schema({
   status: { type: String, default: 'Processing' },
   total_amount: Number,
   customer_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  items: [{ product_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' }, quantity: Number }]
+  items: [{ product_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' }, quantity: Number }],
+  contact_info: {
+    first_name: { type: String, required: true },
+    last_name: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true }
+  }
 });
 
 module.exports = {

@@ -81,9 +81,12 @@ async function loadAdminData() {
     document.getElementById("ordersTable").innerHTML = orders.map(o => {
         const pNames = o.items.map(i => i.product_id ? i.product_id.model_name : 'Deleted').join(", ");
         const pPrices = o.items.map(i => i.product_id ? i.product_id.price.toLocaleString() + ' KZT' : '-').join(", ");
+        const customerName = o.contact_info ? `${o.contact_info.first_name} ${o.contact_info.last_name}` : (o.customer_id ? o.customer_id.full_name : 'Unknown');
+        const customerEmail = o.contact_info ? o.contact_info.email : 'N/A';
+        const customerPhone = o.contact_info ? o.contact_info.phone : 'N/A';
         return `<tr>
             <td>${new Date(o.order_date).toLocaleDateString()}</td>
-            <td>${o.customer_id ? o.customer_id.full_name : 'Unknown'}</td>
+            <td><strong>${customerName}</strong><br><small>${customerEmail}</small><br><small>${customerPhone}</small></td>
             <td><small>${pNames}</small></td>
             <td><span class="text-success fw-bold">${pPrices}</span></td>
             <td><span class="badge bg-secondary">${o.status}</span></td>
@@ -186,14 +189,58 @@ async function submitReview(id) {
     }
 }
 
+let currentOrderData = {};
+
 async function placeOrder(pId, price) {
     if (!token) return alert("Login first");
+    
+    const product = currentProducts.find(p => p._id === pId);
+    currentOrderData = { pId, price };
+    
+    document.getElementById("orderProductName").textContent = product.model_name;
+    document.getElementById("orderProductPrice").textContent = price.toLocaleString();
+    
+    const modal = new bootstrap.Modal(document.getElementById('orderModal'));
+    modal.show();
+}
+
+async function confirmOrder() {
+    const firstName = document.getElementById("orderFirstName").value.trim();
+    const lastName = document.getElementById("orderLastName").value.trim();
+    const email = document.getElementById("orderEmail").value.trim();
+    const phone = document.getElementById("orderPhone").value.trim();
+    
+    if (!firstName || !lastName || !email || !phone) {
+        alert("Please fill in all fields");
+        return;
+    }
+    
     const res = await fetch(`${API}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-auth-token": token },
-        body: JSON.stringify({ total_amount: price, items: [{ product_id: pId, quantity: 1 }] })
+        body: JSON.stringify({ 
+            total_amount: currentOrderData.price, 
+            items: [{ product_id: currentOrderData.pId, quantity: 1 }],
+            contact_info: {
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                phone: phone
+            }
+        })
     });
-    if (res.ok) { alert("Order placed!"); loadProducts(); }
+    
+    if (res.ok) { 
+        bootstrap.Modal.getInstance(document.getElementById('orderModal')).hide();
+        alert("Order placed successfully!");
+        document.getElementById("orderFirstName").value = "";
+        document.getElementById("orderLastName").value = "";
+        document.getElementById("orderEmail").value = "";
+        document.getElementById("orderPhone").value = "";
+        loadProducts();
+    } else {
+        alert("Order failed. Please try again.");
+    }
 }
 
 updateNav();
